@@ -1,17 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
-
-const NUMBER_WORDS = {
-  1: 'one',
-  2: 'two',
-  3: 'three',
-  4: 'four',
-  5: 'five',
-  6: 'six',
-  7: 'seven',
-  8: 'eight',
-  9: 'nine',
-  10: 'ten',
-}
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 function randomFrom(list) {
   return list[Math.floor(Math.random() * list.length)]
@@ -48,12 +35,15 @@ export default function App() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [recentlyCorrect, setRecentlyCorrect] = useState(null)
   const [recentlyIncorrect, setRecentlyIncorrect] = useState(null)
+  const activeAudioRef = useRef(null)
 
   const numbers = useMemo(() => Array.from({ length: 10 }, (_, i) => i + 1), [])
   const [numberOrder, setNumberOrder] = useState(() => shuffleArray(numbers))
   const remaining = numbers.filter((n) => !picked.includes(n))
 
   const resetToStart = () => {
+    activeAudioRef.current?.pause()
+    activeAudioRef.current = null
     setStage('start')
     setPicked([])
     setTarget(null)
@@ -79,22 +69,22 @@ export default function App() {
     setNumberOrder(shuffleArray(numbers))
   }
 
-  const speakNumber = (n) => {
-    if (!window.speechSynthesis) return
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(NUMBER_WORDS[n])
-    utterance.rate = 0.85
-    utterance.pitch = 1
-    window.speechSynthesis.speak(utterance)
+  const playClip = (src) => {
+    activeAudioRef.current?.pause()
+    const audio = new Audio(src)
+    activeAudioRef.current = audio
+    return new Promise((resolve) => {
+      audio.onended = () => resolve()
+      audio.onerror = () => resolve()
+      audio.play().catch(() => resolve())
+    })
   }
 
-  const speakText = (text) => {
-    if (!window.speechSynthesis) return
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 0.9
-    utterance.pitch = 1
-    window.speechSynthesis.speak(utterance)
+  const playNumberClip = (n) => playClip(`/audio/${n}.m4a`)
+
+  const playIncorrectClip = async (clickedNumber) => {
+    await playClip('/audio/sorry.m4a')
+    await playNumberClip(clickedNumber)
   }
 
   const promptNumber = () => {
@@ -102,7 +92,7 @@ export default function App() {
     // Replay the same target until it's answered correctly.
     if (target !== null) {
       setMessage('Find the number I said!')
-      speakNumber(target)
+      playNumberClip(target)
       return
     }
 
@@ -110,7 +100,7 @@ export default function App() {
     const next = randomFrom(remaining)
     setTarget(next)
     setMessage('Find the number I said!')
-    speakNumber(next)
+    playNumberClip(next)
   }
 
   const handlePick = (n) => {
@@ -145,18 +135,18 @@ export default function App() {
     } else {
       setRecentlyIncorrect(n)
       setMessage(`The number is ${target}. Restarting...`)
-      speakText(`Sorry, you clicked on the number ${n}`)
+      playIncorrectClip(n)
       setTarget(null)
       setShowSuccess(false)
       setTimeout(() => {
         resetToStart()
-      }, 3500)
+      }, 5000)
     }
   }
 
   useEffect(() => {
     return () => {
-      window.speechSynthesis?.cancel()
+      activeAudioRef.current?.pause()
     }
   }, [])
 
