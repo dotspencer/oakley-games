@@ -1,0 +1,227 @@
+import { useEffect, useMemo, useState } from 'react'
+
+const NUMBER_WORDS = {
+  1: 'one',
+  2: 'two',
+  3: 'three',
+  4: 'four',
+  5: 'five',
+  6: 'six',
+  7: 'seven',
+  8: 'eight',
+  9: 'nine',
+  10: 'ten',
+}
+
+function randomFrom(list) {
+  return list[Math.floor(Math.random() * list.length)]
+}
+
+function shuffleArray(list) {
+  const shuffled = [...list]
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
+function createConfettiBurst() {
+  const colors = ['#f94144', '#f3722c', '#f9c74f', '#90be6d', '#577590']
+  return Array.from({ length: 100 }, (_, i) => ({
+    id: `${Date.now()}-${i}`,
+    left: Math.random() * 100,
+    delay: Math.random() * 0.2,
+    duration: 1.4 + Math.random() * 1,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    rotate: Math.random() * 720,
+    xOffset: (Math.random() - 0.5) * 260,
+  }))
+}
+
+export default function App() {
+  const [stage, setStage] = useState('start')
+  const [picked, setPicked] = useState([])
+  const [target, setTarget] = useState(null)
+  const [message, setMessage] = useState('Tap the speaker to hear a number!')
+  const [confetti, setConfetti] = useState([])
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [recentlyCorrect, setRecentlyCorrect] = useState(null)
+
+  const numbers = useMemo(() => Array.from({ length: 10 }, (_, i) => i + 1), [])
+  const [numberOrder, setNumberOrder] = useState(() => shuffleArray(numbers))
+  const remaining = numbers.filter((n) => !picked.includes(n))
+
+  const resetToStart = () => {
+    setStage('start')
+    setPicked([])
+    setTarget(null)
+    setShowSuccess(false)
+    setRecentlyCorrect(null)
+    setMessage('Tap the speaker to hear a number!')
+    setConfetti([])
+  }
+
+  const startGame = () => {
+    setStage('play')
+    setPicked([])
+    setTarget(null)
+    setShowSuccess(false)
+    setRecentlyCorrect(null)
+    setMessage('Tap the speaker to hear a number!')
+    setNumberOrder(shuffleArray(numbers))
+  }
+
+  const reshuffleBoard = () => {
+    setNumberOrder(shuffleArray(numbers))
+  }
+
+  const speakNumber = (n) => {
+    if (!window.speechSynthesis) return
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(NUMBER_WORDS[n])
+    utterance.rate = 0.85
+    utterance.pitch = 1
+    window.speechSynthesis.speak(utterance)
+  }
+
+  const promptNumber = () => {
+    if (stage !== 'play') return
+    // Replay the same target until it's answered correctly.
+    if (target !== null) {
+      setMessage('Find the number I said!')
+      speakNumber(target)
+      return
+    }
+
+    if (!remaining.length) return
+    const next = randomFrom(remaining)
+    setTarget(next)
+    setShowSuccess(false)
+    setMessage('Find the number I said!')
+    speakNumber(next)
+  }
+
+  const handlePick = (n) => {
+    if (stage !== 'play') return
+    if (target === null) {
+      setMessage('Tap the speaker first!')
+      return
+    }
+
+    if (n === target) {
+      const updated = picked.includes(n) ? picked : [...picked, n]
+      setPicked(updated)
+      setShowSuccess(true)
+      setRecentlyCorrect(n)
+      setConfetti(createConfettiBurst())
+      setTimeout(() => setConfetti([]), 1700)
+      setTimeout(() => {
+        setRecentlyCorrect(null)
+        reshuffleBoard()
+      }, 2200)
+
+      if (updated.length === 10) {
+        setStage('win')
+        setMessage('Amazing! You found all numbers.')
+        setTarget(null)
+      } else {
+        setTarget(null)
+        setMessage('Great job! Tap speaker for the next number.')
+      }
+    } else {
+      setStage('lose')
+      setMessage('Game Over')
+      setTarget(null)
+      setShowSuccess(false)
+      setTimeout(() => {
+        resetToStart()
+      }, 1800)
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis?.cancel()
+    }
+  }, [])
+
+  return (
+    <main className={`app app--${stage} ${showSuccess ? 'app--correct' : ''}`}>
+      {confetti.map((piece) => (
+        <span
+          key={piece.id}
+          className="confetti"
+          style={{
+            left: `${piece.left}%`,
+            '--delay': `${piece.delay}s`,
+            '--duration': `${piece.duration}s`,
+            '--color': piece.color,
+            '--rotate': `${piece.rotate}deg`,
+            '--x-offset': `${piece.xOffset}px`,
+          }}
+        />
+      ))}
+
+      {stage === 'start' && (
+        <section className="card center">
+          <h1>Number Game 1-10</h1>
+          <button className="big-button" onClick={startGame}>
+            Start Game
+          </button>
+        </section>
+      )}
+
+      {stage === 'play' && (
+        <section className="card">
+          <h1>Pick the Number</h1>
+          <p className="status">{message}</p>
+          <button className="speaker" onClick={promptNumber} aria-label="Play random number">
+            🔊
+          </button>
+          <div className="grid">
+            {numberOrder.map((n) => (
+              <button
+                key={n}
+                className={`number ${recentlyCorrect === n ? 'number--flash' : ''}`}
+                onClick={() => handlePick(n)}
+                disabled={target === null && recentlyCorrect === n}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <div className="dot-progress" aria-label="Progress indicator">
+            {numbers.map((n, index) => (
+              <span
+                key={`dot-${n}`}
+                className={`progress-dot ${index < picked.length ? 'progress-dot--done' : ''}`}
+              />
+            ))}
+          </div>
+          <p className="progress">Found: {picked.length} / 10</p>
+        </section>
+      )}
+
+      {stage === 'lose' && (
+        <section className="card center">
+          <h1>Game Over</h1>
+          <p>Restarting...</p>
+        </section>
+      )}
+
+      {stage === 'win' && (
+        <section className="card center certificate">
+          <h1>Number Star Certificate</h1>
+          <p>This certifies that</p>
+          <h2>Super Number Learner</h2>
+          <p>found every number from 1 to 10.</p>
+          <p className="treat">Reward: A treat of your choice!</p>
+          <button className="big-button" onClick={resetToStart}>
+            Play Again
+          </button>
+        </section>
+      )}
+    </main>
+  )
+}
