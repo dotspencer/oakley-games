@@ -82,9 +82,9 @@ export default function App() {
 
   const playNumberClip = (n) => playClip(`/audio/${n}.m4a`)
 
-  const playIncorrectClip = async (clickedNumber) => {
+  const playIncorrectClip = async (correctNumber) => {
     await playClip('/audio/sorry.m4a')
-    await playNumberClip(clickedNumber)
+    await playNumberClip(correctNumber)
   }
 
   const promptNumber = () => {
@@ -133,9 +133,10 @@ export default function App() {
         setMessage('Great job! Tap speaker for the next number.')
       }
     } else {
-      setRecentlyIncorrect(n)
-      setMessage(`The number is ${target}. Restarting...`)
-      playIncorrectClip(n)
+      const correctNumber = target
+      setRecentlyIncorrect(correctNumber)
+      setMessage(`The number is ${correctNumber}. Restarting...`)
+      playIncorrectClip(correctNumber)
       setTarget(null)
       setShowSuccess(false)
       setTimeout(() => {
@@ -187,7 +188,7 @@ export default function App() {
             {numberOrder.map((n) => (
               <button
                 key={n}
-                className={`number ${recentlyCorrect === n ? 'number--flash' : ''} ${recentlyIncorrect === n ? 'number--wrong' : ''}`}
+                className={`number ${recentlyCorrect === n ? 'number--flash' : ''} ${recentlyIncorrect === n ? 'number--target' : ''}`}
                 onClick={() => handlePick(n)}
                 disabled={(target === null && recentlyCorrect === n) || recentlyIncorrect !== null}
               >
