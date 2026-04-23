@@ -135,6 +135,12 @@ h1 {
   cursor: not-allowed;
 }
 
+.number--wrong {
+  background: #ef4444;
+  color: #ffffff;
+  cursor: not-allowed;
+}
+
 .certificate {
   border: 5px dashed #f59e0b;
 }

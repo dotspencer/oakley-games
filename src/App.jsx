@@ -47,6 +47,7 @@ export default function App() {
   const [confetti, setConfetti] = useState([])
   const [showSuccess, setShowSuccess] = useState(false)
   const [recentlyCorrect, setRecentlyCorrect] = useState(null)
+  const [recentlyIncorrect, setRecentlyIncorrect] = useState(null)
 
   const numbers = useMemo(() => Array.from({ length: 10 }, (_, i) => i + 1), [])
   const [numberOrder, setNumberOrder] = useState(() => shuffleArray(numbers))
@@ -58,6 +59,7 @@ export default function App() {
     setTarget(null)
     setShowSuccess(false)
     setRecentlyCorrect(null)
+    setRecentlyIncorrect(null)
     setMessage('Tap the speaker to hear a number!')
     setConfetti([])
   }
@@ -68,6 +70,7 @@ export default function App() {
     setTarget(null)
     setShowSuccess(false)
     setRecentlyCorrect(null)
+    setRecentlyIncorrect(null)
     setMessage('Tap the speaker to hear a number!')
     setNumberOrder(shuffleArray(numbers))
   }
@@ -81,6 +84,15 @@ export default function App() {
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(NUMBER_WORDS[n])
     utterance.rate = 0.85
+    utterance.pitch = 1
+    window.speechSynthesis.speak(utterance)
+  }
+
+  const speakText = (text) => {
+    if (!window.speechSynthesis) return
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.rate = 0.9
     utterance.pitch = 1
     window.speechSynthesis.speak(utterance)
   }
@@ -113,6 +125,7 @@ export default function App() {
       const updated = picked.includes(n) ? picked : [...picked, n]
       setPicked(updated)
       setShowSuccess(true)
+      setRecentlyIncorrect(null)
       setRecentlyCorrect(n)
       setConfetti(createConfettiBurst())
       setTimeout(() => setConfetti([]), 1700)
@@ -130,13 +143,14 @@ export default function App() {
         setMessage('Great job! Tap speaker for the next number.')
       }
     } else {
-      setStage('lose')
-      setMessage('Game Over')
+      setRecentlyIncorrect(n)
+      setMessage(`The number is ${target}. Restarting...`)
+      speakText(`Sorry, you clicked on the number ${n}`)
       setTarget(null)
       setShowSuccess(false)
       setTimeout(() => {
         resetToStart()
-      }, 1800)
+      }, 3500)
     }
   }
 
@@ -183,9 +197,9 @@ export default function App() {
             {numberOrder.map((n) => (
               <button
                 key={n}
-                className={`number ${recentlyCorrect === n ? 'number--flash' : ''}`}
+                className={`number ${recentlyCorrect === n ? 'number--flash' : ''} ${recentlyIncorrect === n ? 'number--wrong' : ''}`}
                 onClick={() => handlePick(n)}
-                disabled={target === null && recentlyCorrect === n}
+                disabled={(target === null && recentlyCorrect === n) || recentlyIncorrect !== null}
               >
                 {n}
               </button>
@@ -200,13 +214,6 @@ export default function App() {
             ))}
           </div>
           <p className="progress">Found: {picked.length} / 10</p>
-        </section>
-      )}
-
-      {stage === 'lose' && (
-        <section className="card center">
-          <h1>Game Over</h1>
-          <p>Restarting...</p>
         </section>
       )}
 
