@@ -109,7 +109,6 @@ export default function App() {
     if (!remaining.length) return
     const next = randomFrom(remaining)
     setTarget(next)
-    setShowSuccess(false)
     setMessage('Find the number I said!')
     speakNumber(next)
   }
@@ -131,6 +130,7 @@ export default function App() {
       setTimeout(() => setConfetti([]), 1700)
       setTimeout(() => {
         setRecentlyCorrect(null)
+        setShowSuccess(false)
         reshuffleBoard()
       }, 2200)
 
