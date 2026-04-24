@@ -141,7 +141,7 @@ export default function App() {
       setShowSuccess(false)
       setTimeout(() => {
         resetToStart()
-      }, 5000)
+      }, 6000)
     }
   }
 
