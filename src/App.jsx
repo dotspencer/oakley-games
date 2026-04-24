@@ -80,10 +80,10 @@ export default function App() {
     })
   }
 
-  const playNumberClip = (n) => playClip(`/audio/${n}.m4a`)
+  const playNumberClip = (n) => playClip(`/oakley-games/audio/${n}.m4a`)
 
   const playIncorrectClip = async (correctNumber) => {
-    await playClip('/audio/sorry.m4a')
+    await playClip('/oakley-games/audio/sorry.m4a')
     await playNumberClip(correctNumber)
   }
 
