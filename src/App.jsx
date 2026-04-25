@@ -89,6 +89,7 @@ export default function App() {
 
   const promptNumber = () => {
     if (stage !== 'play') return
+    if (recentlyIncorrect !== null) return
     // Replay the same target until it's answered correctly.
     if (target !== null) {
       setMessage('Find the number I said!')
@@ -181,7 +182,12 @@ export default function App() {
         <section className="card">
           <h1>Pick the Number</h1>
           <p className="status">{message}</p>
-          <button className="speaker" onClick={promptNumber} aria-label="Play random number">
+          <button
+            className="speaker"
+            onClick={promptNumber}
+            aria-label="Play random number"
+            disabled={recentlyIncorrect !== null}
+          >
             🔊
           </button>
           <div className="grid">
