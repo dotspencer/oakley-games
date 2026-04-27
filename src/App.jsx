@@ -30,7 +30,7 @@ export default function App() {
   const [stage, setStage] = useState('start')
   const [picked, setPicked] = useState([])
   const [target, setTarget] = useState(null)
-  const [message, setMessage] = useState('Tap the speaker to hear a number!')
+  const [message, setMessage] = useState('Tap the speaker to hear a number.')
   const [confetti, setConfetti] = useState([])
   const [showSuccess, setShowSuccess] = useState(false)
   const [recentlyCorrect, setRecentlyCorrect] = useState(null)
@@ -50,7 +50,7 @@ export default function App() {
     setShowSuccess(false)
     setRecentlyCorrect(null)
     setRecentlyIncorrect(null)
-    setMessage('Tap the speaker to hear a number!')
+    setMessage('Tap the speaker to hear a number.')
     setConfetti([])
   }
 
@@ -61,7 +61,7 @@ export default function App() {
     setShowSuccess(false)
     setRecentlyCorrect(null)
     setRecentlyIncorrect(null)
-    setMessage('Tap the speaker to hear a number!')
+    setMessage('Tap the speaker to hear a number.')
     setNumberOrder(shuffleArray(numbers))
   }
 
@@ -92,7 +92,7 @@ export default function App() {
     if (recentlyIncorrect !== null) return
     // Replay the same target until it's answered correctly.
     if (target !== null) {
-      setMessage('Find the number I said!')
+      setMessage('Find the number!')
       playNumberClip(target)
       return
     }
@@ -100,7 +100,7 @@ export default function App() {
     if (!remaining.length) return
     const next = randomFrom(remaining)
     setTarget(next)
-    setMessage('Find the number I said!')
+    setMessage('Find the number!')
     playNumberClip(next)
   }
 
@@ -180,7 +180,6 @@ export default function App() {
 
       {stage === 'play' && (
         <section className="card">
-          <h1>Pick the Number</h1>
           <p className="status">{message}</p>
           <button
             className="speaker"

@@ -120,7 +120,7 @@ h1 {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(48px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: 0.7rem;
 }
 
@@ -184,7 +184,11 @@ h1 {
 
 @media (max-width: 640px) {
   .grid {
-    grid-template-columns: repeat(5, minmax(36px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .number {
+    font-size: 3rem;
+    aspect-ratio: unset;
   }
 
   .speaker {
