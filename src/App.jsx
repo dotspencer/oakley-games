@@ -147,13 +147,26 @@ export default function App() {
   }
 
   useEffect(() => {
+    const bodyClassNames = ['game-body', `game-body--${stage}`]
+    if (showSuccess) {
+      bodyClassNames.push('game-body--correct')
+    }
+
+    document.body.classList.add(...bodyClassNames)
+
+    return () => {
+      document.body.classList.remove(...bodyClassNames)
+    }
+  }, [showSuccess, stage])
+
+  useEffect(() => {
     return () => {
       activeAudioRef.current?.pause()
     }
   }, [])
 
   return (
-    <main className={`app app--${stage} ${showSuccess ? 'app--correct' : ''}`}>
+    <main className="app">
       {confetti.map((piece) => (
         <span
           key={piece.id}
