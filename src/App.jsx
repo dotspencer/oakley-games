@@ -131,7 +131,7 @@ export default function App() {
         setTarget(null)
       } else {
         setTarget(null)
-        setMessage('Great job! Tap speaker for the next number.')
+        setMessage('Great job! Tap speaker again.')
       }
     } else {
       const correctNumber = target
